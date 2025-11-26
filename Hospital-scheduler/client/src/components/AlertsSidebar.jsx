@@ -1,52 +1,67 @@
 // client/src/components/AlertsSidebar.jsx
-import { Box, Typography, Paper, List, ListItem, ListItemText } from "@mui/material";
+import { Box, Paper, Typography, List, ListItem, ListItemText, Divider } from "@mui/material";
 import { useAlerts } from "../context/AlertsContext.jsx";
-import { format } from "date-fns";
 
 export default function AlertsSidebar() {
   const { alerts } = useAlerts();
+  const hasAlerts = alerts && alerts.length > 0;
 
   return (
-    <Box sx={{ mt: 2 }}>
-      <Paper
-        sx={{
-          p: 2,
-          borderRadius: 3,
-          height: 260,
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
-          Alerts
+    <Paper
+      sx={{
+        width: "100%",
+        borderRadius: 3,
+        boxShadow: "0px 4px 12px rgba(15, 23, 42, 0.08)",
+        p: 2,
+        display: "flex",
+        flexDirection: "column",
+        minHeight: 100,
+        maxHeight: 100,              // <--- cap total height of the card
+      }}
+    >
+      <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
+        Alerts
+      </Typography>
+
+      {!hasAlerts && (
+        <Typography variant="body2" color="text.secondary">
+          No alerts yet.
         </Typography>
-        <Box sx={{ flex: 1, overflowY: "auto" }}>
-          {alerts.length === 0 ? (
-            <Typography variant="body2" color="text.secondary">
-              No alerts yet.
-            </Typography>
-          ) : (
-            <List dense>
-              {alerts.map((a) => (
-                <ListItem key={a.id} sx={{ alignItems: "flex-start" }}>
+      )}
+
+      {hasAlerts && (
+        <Box
+          sx={{
+            flex: 1,
+            overflowY: "auto",       // <--- scroll when many alerts
+            mt: 0.5,
+          }}
+        >
+          <List dense>
+            {alerts.map((alert, idx) => (
+              <Box key={alert.id ?? idx}>
+                <ListItem alignItems="flex-start">
                   <ListItemText
                     primary={
                       <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                        {a.message}
+                        {alert.message ?? alert.text ?? "Alert"}
                       </Typography>
                     }
                     secondary={
-                      <Typography variant="caption" color="text.secondary">
-                        {format(new Date(a.timestamp), "MMM d, HH:mm")}
-                      </Typography>
+                      alert.timestamp && (
+                        <Typography variant="caption" color="text.secondary">
+                          {new Date(alert.timestamp).toLocaleString()}
+                        </Typography>
+                      )
                     }
                   />
                 </ListItem>
-              ))}
-            </List>
-          )}
+                {idx < alerts.length - 1 && <Divider component="li" />}
+              </Box>
+            ))}
+          </List>
         </Box>
-      </Paper>
-    </Box>
+      )}
+    </Paper>
   );
 }

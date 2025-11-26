@@ -50,6 +50,18 @@ export async function apiUpdateEvent(role, userId, id, changes) {
   return handleRes(res);
 }
 
+export async function apiDeleteEvent(role, userId, eventId) {
+    const res = await fetch(
+      `${API_BASE}/events/${eventId}?role=${encodeURIComponent(role)}&userId=${encodeURIComponent(
+        userId
+      )}`,
+      {
+        method: "DELETE",
+      }
+    );
+    return handleRes(res);
+  }  
+
 export async function apiSendAlert(message, recipients) {
   const res = await fetch(`${API_BASE}/alerts`, {
     method: "POST",

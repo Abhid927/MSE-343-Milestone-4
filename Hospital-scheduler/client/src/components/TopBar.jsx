@@ -1,20 +1,37 @@
 // client/src/components/TopBar.jsx
-import { AppBar, Toolbar, Typography, Button } from "@mui/material";
-import { useAuth } from "../context/AuthContext";
+import { AppBar, Toolbar, Typography, Box } from "@mui/material";
+import { useAuth } from "../context/AuthContext.jsx";
 
 export default function TopBar() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
+
+  const roleLabel =
+    user.role.charAt(0).toUpperCase() + user.role.slice(1).toUpperCase();
 
   return (
-    <AppBar position="static" color="primary">
-      <Toolbar>
-        <Typography variant="h6" sx={{ flexGrow: 1 }}>
-          Hospital Scheduling – {user.role.toUpperCase()}
+    <AppBar
+      position="static"
+      elevation={0}
+      sx={{
+        bgcolor: "#1976d2",
+      }}
+    >
+      <Toolbar
+        sx={{
+          px: 4,
+          display: "flex",
+          justifyContent: "space-between",
+        }}
+      >
+        <Typography variant="h6" component="div" sx={{ fontWeight: 600 }}>
+          Hospital Scheduling – {roleLabel}
         </Typography>
-        <Typography sx={{ mr: 2 }}>{user.name}</Typography>
-        <Button color="inherit" onClick={logout}>
-          Logout
-        </Button>
+
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Typography variant="body2">
+            {user.name}
+          </Typography>
+        </Box>
       </Toolbar>
     </AppBar>
   );

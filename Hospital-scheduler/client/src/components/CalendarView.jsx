@@ -9,6 +9,10 @@ import {
   import "react-big-calendar/lib/css/react-big-calendar.css";
   import { format, parse, startOfWeek, getDay } from "date-fns";
   import enUS from "date-fns/locale/en-US";
+  import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+  import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
+  import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+
   
   import {
     Box,
@@ -34,6 +38,7 @@ import {
     apiSendAlert,
     apiGetDoctors,
     apiUpdateOR,
+    apiDeleteEvent,
   } from "../api/client.js";
   import { useAlerts } from "../context/AlertsContext.jsx";
   
@@ -60,7 +65,7 @@ import {
     const { addAlert } = useAlerts();
   
     const [events, setEvents] = useState([]);
-    const [view, setView] = useState(defaultView || Views.MONTH);
+    const [currentView, setCurrentView] = useState(defaultView || Views.MONTH);
     const [doctors, setDoctors] = useState([]);
     const [doctorColors, setDoctorColors] = useState({});
   
@@ -147,7 +152,7 @@ import {
     }, [user, showToast]);
   
     const handleSelectSlot = ({ start, end }) => {
-      if (user.role === "admin" || user.role === "doctor") {
+      if (user.role === "doctor") {
         setIsEditing(false);
         setEditingEventId(null);
         setForm({
@@ -165,15 +170,26 @@ import {
   
     const handleCreateOrUpdate = async () => {
       try {
-        if (!form.start || !form.end) {
-          showToast("Missing start or end time", "error");
-          return;
-        }
-  
-        if (user.role !== "doctor" && !form.doctorId) {
-          showToast("Please select a doctor", "error");
-          return;
-        }
+        if (
+            !form.title?.trim() ||
+            !form.patientName?.trim() ||
+            !form.orNumber ||
+            !form.start ||
+            !form.end ||
+            (user.role !== "doctor" && !form.doctorId)
+          ) {
+            showToast(
+              "Please fill in Title, Patient Name, OR #, Start time, End time, and Doctor.",
+              "error"
+            );
+            return;
+          }
+          
+          // Time ordering validation
+          if (form.start >= form.end) {
+            showToast("End time must be after the start time.", "error");
+            return;
+          }
   
         if (isEditing && editingEventId != null) {
           const updated = await apiUpdateEvent(user.role, user.id, editingEventId, {
@@ -296,6 +312,27 @@ import {
         setAlertReason("");
       }
     };
+
+    const handleDeleteEvent = async () => {
+        if (!activeEvent) return;
+    
+        if (!window.confirm("Are you sure you want to delete this event?")) {
+          return;
+        }
+    
+        try {
+          const deleted = await apiDeleteEvent(user.role, user.id, activeEvent.id);
+    
+          setEvents((prev) => prev.filter((e) => e.id !== deleted.id));
+          addAlert(`Event deleted: ${deleted.title}`, { role: user.role });
+          showToast("Event deleted successfully", "success");
+        } catch (err) {
+          console.error(err);
+          showToast(err.message || "Failed to delete event", "error");
+        } finally {
+          setEventDetailsOpen(false);
+        }
+      };    
   
     const eventPropGetter = (event) => {
       const base = doctorColors[event.doctorId] || "#ECEFF1";
@@ -316,7 +353,7 @@ import {
       event: ({ event }) => {
         const doc = doctors.find((d) => d.id === event.doctorId);
   
-        if (view === Views.MONTH) {
+        if (currentView === Views.MONTH) {
           // Compact single-line label for month view (no cut-off)
           const label = `${format(event.start, "HH:mm")} · ${
             doc ? doc.name : "No doctor"
@@ -362,16 +399,19 @@ import {
         );
       },
     };
-  
+
+  const CANLENDER_HEIGHT = 620;
+
     return (
-      <Box sx={{ height: "100%", p: 2 }}>
+      <Box sx={{ height: CANLENDER_HEIGHT, p: 2 }}>
         <Typography variant="h6" gutterBottom>
-          Monthly Overview
+          Schedule
         </Typography>
   
         <Box
           sx={{
-            height: "calc(100% - 40px)",
+            mt: 1,
+            width: "100%",
             bgcolor: "white",
             borderRadius: 3,
             boxShadow: "0px 4px 16px rgba(15, 23, 42, 0.06)",
@@ -383,10 +423,11 @@ import {
             events={events}
             startAccessor="start"
             endAccessor="end"
-            style={{ height: "100%" }}
+            style={{ height: CANLENDER_HEIGHT, width: "100%"}}
             selectable
-            view={view}
-            onView={setView}
+            view={currentView}
+            onView={(newView) => setCurrentView(newView)}
+            key={currentView}
             views={[Views.DAY, Views.WEEK, Views.MONTH]}
             onSelectSlot={handleSelectSlot}
             onSelectEvent={handleEventClick}
@@ -416,6 +457,7 @@ import {
               label="Title"
               value={form.title}
               onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+              required
             />
             <TextField
               fullWidth
@@ -423,6 +465,7 @@ import {
               label="Patient Name"
               value={form.patientName}
               onChange={(e) => setForm((f) => ({ ...f, patientName: e.target.value }))}
+              required
             />
             <TextField
               fullWidth
@@ -431,6 +474,7 @@ import {
               type="number"
               value={form.orNumber}
               onChange={(e) => setForm((f) => ({ ...f, orNumber: e.target.value }))}
+              required
             />
             <TextField
               fullWidth
@@ -441,28 +485,41 @@ import {
             />
   
             {/* Date & time controls */}
-            <TextField
-              fullWidth
-              margin="normal"
-              label="Start"
-              type="datetime-local"
-              value={toInputDateTime(form.start)}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, start: fromInputDateTime(e.target.value) }))
-              }
-              InputLabelProps={{ shrink: true }}
-            />
-            <TextField
-              fullWidth
-              margin="normal"
-              label="End"
-              type="datetime-local"
-              value={toInputDateTime(form.end)}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, end: fromInputDateTime(e.target.value) }))
-              }
-              InputLabelProps={{ shrink: true }}
-            />
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <DateTimePicker
+                    label="Start"
+                    value={form.start}
+                    onChange={(newValue) =>
+                    setForm((f) => ({ ...f, start: newValue }))
+                    }
+                    minutesStep={15}
+                    renderInput={(params) => (
+                    <TextField
+                        {...params}
+                        fullWidth
+                        margin="normal"
+                        required
+                    />
+                    )}
+                />
+
+                <DateTimePicker
+                    label="End"
+                    value={form.end}
+                    onChange={(newValue) =>
+                    setForm((f) => ({ ...f, end: newValue }))
+                    }
+                    minutesStep={15}
+                    renderInput={(params) => (
+                    <TextField
+                        {...params}
+                        fullWidth
+                        margin="normal"
+                        required
+                    />
+                    )}
+                />
+                </LocalizationProvider>
   
             {user.role !== "doctor" && (
               <FormControl fullWidth margin="normal">
@@ -528,6 +585,14 @@ import {
             <Button variant="contained" onClick={openModifyFromDetails}>
               Modify
             </Button>
+            {user.role === "admin" && (
+            <Button
+                color="error"
+                variant="outlined"
+                onClick={handleDeleteEvent}
+            >
+                Delete
+            </Button>)}
           </DialogActions>
         </Dialog>
   

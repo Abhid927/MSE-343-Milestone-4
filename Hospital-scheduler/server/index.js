@@ -144,6 +144,25 @@ app.put("/api/events/:id", (req, res) => {
   res.json(updated);
 });
 
+// Delete event – only admins are allowed
+app.delete("/api/events/:id", (req, res) => {
+    const id = Number(req.params.id);
+    const { role } = req.query;
+  
+    // Enforce permission: only admin can delete
+    if (role !== "admin") {
+      return res.status(403).json({ message: "Only admins can delete events" });
+    }
+  
+    const idx = events.findIndex((e) => e.id === id);
+    if (idx === -1) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+  
+    const [deleted] = events.splice(idx, 1);
+    res.json(deleted);
+  });  
+
 // ---------------- Alerts ----------------
 app.post("/api/alerts", (req, res) => {
   const { message, recipients } = req.body;

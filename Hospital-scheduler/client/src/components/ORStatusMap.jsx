@@ -1,9 +1,9 @@
 // client/src/components/ORStatusMap.jsx
 import { useEffect, useState } from "react";
-import { apiGetORs, apiUpdateOR, apiGetEvents } from "../api/client.js";
+import { apiGetORs, apiGetEvents } from "../api/client.js";
 import { useToast } from "../context/ToastContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
-import { Box, Typography, Grid, Card, CardContent, Chip, Select, MenuItem } from "@mui/material";
+import { Box, Typography, Grid, Card, CardContent, Chip } from "@mui/material";
 
 const statusColors = {
   available: "success",
@@ -37,29 +37,23 @@ export default function ORStatusMap() {
     }
   };
 
+  // Initial load + auto-refresh every 3 seconds for near-instant updates
   useEffect(() => {
     loadData();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleStatusChange = async (id, status) => {
-    try {
-      const updated = await apiUpdateOR(id, status, null);
-      setOrs((prev) => prev.map((o) => (o.id === id ? updated : o)));
-      showToast(`OR status updated to ${status}`, "success");
-    } catch (err) {
-      console.error(err);
-      showToast("Failed to update OR status", "error");
-    }
-  };
+    const id = setInterval(loadData, 3000);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const now = new Date();
 
+  // Status is derived from schedule: occupied if any active event uses this OR
   const effectiveStatus = (room) => {
     const ongoing = events.some(
       (e) => e.orNumber === room.id && e.start <= now && e.end >= now
     );
     if (ongoing) return "occupied";
-    return room.status || "available";
+    return "available"; // default when no cases running
   };
 
   const summary = ors.reduce(
@@ -68,7 +62,7 @@ export default function ORStatusMap() {
       acc[status] = (acc[status] || 0) + 1;
       return acc;
     },
-    { available: 0, occupied: 0, cleaning: 0 }
+    { available: 0, occupied: 0 }
   );
 
   return (
@@ -89,18 +83,15 @@ export default function ORStatusMap() {
                   <Chip
                     label={status.toUpperCase()}
                     color={statusColors[status] || "default"}
-                    sx={{ mt: 1, mb: 1 }}
+                    sx={{ mt: 1 }}
                   />
-                  <Select
-                    fullWidth
-                    size="small"
-                    value={room.status}
-                    onChange={(e) => handleStatusChange(room.id, e.target.value)}
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ display: "block", mt: 1 }}
                   >
-                    <MenuItem value="available">Available</MenuItem>
-                    <MenuItem value="occupied">Occupied</MenuItem>
-                    <MenuItem value="cleaning">Cleaning</MenuItem>
-                  </Select>
+                    Status updates automatically based on the OR schedule.
+                  </Typography>
                 </CardContent>
               </Card>
             </Grid>
@@ -110,8 +101,7 @@ export default function ORStatusMap() {
 
       <Box sx={{ mt: 2 }}>
         <Typography variant="caption">
-          {summary.available} Available · {summary.occupied} Occupied ·{" "}
-          {summary.cleaning} Cleaning
+          {summary.available} Available · {summary.occupied} Occupied
         </Typography>
       </Box>
     </Box>
