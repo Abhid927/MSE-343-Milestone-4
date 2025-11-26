@@ -4,21 +4,25 @@
 let events = [
     {
       id: 1,
-      title: "Knee Surgery - OR1",
+      title: "Knee Surgery",
       start: new Date().setHours(9, 0, 0, 0),
       end: new Date().setHours(10, 30, 0, 0),
       patientName: "John Doe",
       doctorId: 3,
+      orNumber: 1,
+      reason: "Elective surgery",
       createdByRole: "admin",
       type: "appointment",
     },
     {
       id: 2,
-      title: "Clinic Consults",
+      title: "Emergency Appendectomy",
       start: new Date().setHours(11, 0, 0, 0),
-      end: new Date().setHours(13, 0, 0, 0),
-      patientName: "Multiple",
-      doctorId: 3,
+      end: new Date().setHours(12, 30, 0, 0),
+      patientName: "Jane Smith",
+      doctorId: 4,
+      orNumber: 2,
+      reason: "Emergency",
       createdByRole: "nurse",
       type: "appointment",
     },
@@ -27,7 +31,10 @@ let events = [
       title: "Dr. Dan – Time Off",
       start: new Date().setHours(15, 0, 0, 0),
       end: new Date().setHours(17, 0, 0, 0),
+      patientName: "",
       doctorId: 3,
+      orNumber: null,
+      reason: "Conference",
       createdByRole: "doctor",
       type: "timeoff",
     },
@@ -49,4 +56,5 @@ let events = [
   }
   
   module.exports = { events, createEvent, updateEvent };
+  
   

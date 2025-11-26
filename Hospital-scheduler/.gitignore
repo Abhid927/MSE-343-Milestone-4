@@ -1,0 +1,42 @@
+# ==========================
+# Root Gitignore (React + Node)
+# ==========================
+
+# --- Node modules ---
+client/node_modules/
+server/node_modules/
+
+# --- Build outputs (Vite) ---
+client/dist/
+
+# --- Logs ---
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- Env files ---
+.env
+.env.local
+.env.development.local
+.env.production.local
+
+# --- OS / Editor junk ---
+.DS_Store
+Thumbs.db
+
+# --- Vite cache ---
+client/.vite/
+
+# --- Temporary files ---
+*.tmp
+*.temp
+
+# --- VSCode settings (optional) ---
+.vscode/
+
+# --- Lock files (keep if you want reproducible builds; optional to ignore) ---
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml

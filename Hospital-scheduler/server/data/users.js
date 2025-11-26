@@ -15,11 +15,24 @@ const users = [
     },
     {
       id: 3,
-      name: "Dan Doctor",
-      email: "dan.doctor@hospital.com",
+      name: "Dr. Dan Smith",
+      email: "dan.smith@hospital.com",
+      role: "doctor",
+    },
+    {
+      id: 4,
+      name: "Dr. Priya Patel",
+      email: "priya.patel@hospital.com",
+      role: "doctor",
+    },
+    {
+      id: 5,
+      name: "Dr. Miguel Rodriguez",
+      email: "miguel.rodriguez@hospital.com",
       role: "doctor",
     },
   ];
   
   module.exports = { users };
+  
   

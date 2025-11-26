@@ -30,7 +30,7 @@ export default function LoginForm() {
           Hospital Scheduler Login
         </Typography>
         <Typography variant="body2" color="text.secondary" gutterBottom>
-          Use one of: alice.admin@hospital.com, nina.nurse@hospital.com, dan.doctor@hospital.com
+          Use one of: alice.admin@hospital.com, nina.nurse@hospital.com, dan.smith@hospital.com
         </Typography>
         <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
           <TextField
