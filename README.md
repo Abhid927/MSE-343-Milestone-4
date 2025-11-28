@@ -54,7 +54,7 @@ npm install
 
 Inside the server folder, type:
 
-npm start
+node index.js
 
 The backend will start on or a similar URL:
 
@@ -123,3 +123,4 @@ If errors occur during installation or startup, the following common solutions m
 • If the backend does not start, ensure port 5000 is free or restart your terminal
 
 • If the calendar UI looks misaligned, refresh the browser after startup
+
